@@ -7,7 +7,7 @@ import sqlite3
 import os
 from prettytable import PrettyTable
 from sqlite3 import Error
-from urllib import request
+# from urllib import request
 from bs4 import BeautifulSoup
 
 # Database location
@@ -89,8 +89,9 @@ def add_check(name_check):
 
 
 def get_item_name(item_type, url_item):
-    url = url_item
-    html = request.urlopen(url).read().decode('utf8')
+    response = requests.get(url_item)
+    response.raise_for_status()
+    html = response.text
     soup = BeautifulSoup(html, 'lxml')
 
     if item_type == "model":
@@ -335,6 +336,7 @@ def list_items(item):
     with conn:
         print("Listing items from database:")
         select_all_items(conn, item)
+    
 
 
 def delete_single_item(conn, id):
