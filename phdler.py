@@ -1,55 +1,90 @@
-#!/usr/bin/env python
-from functions import *
+from flask import Flask, jsonify, request
+from functions import *  # Import your custom functions
 
-def main():
+app = Flask(__name__)
 
-    check_for_database()
+# This works
+@app.route('/start', methods=['POST'])
+def start():
+    try:
+        dl_start()
+        return jsonify({"message": "Download started successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    if len(sys.argv) > 1:
+@app.route('/custom', methods=['POST'])
+def custom():
+    item = requests.json.get('item')
+    if not item:
+        return jsonify({"error": "Missing item parameter."}), 400
+    try:
+        custom_dl(item)
+        return jsonify({"message": "Custom download started successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-        if sys.argv[1] == "start":
-            dl_start()
-            
-        elif sys.argv[1] == "custom":
-            if len(sys.argv) > 2:
-                custom_dl(sys.argv[2])
-            else:
-                how_to_use("Missing item")
+# This works 
+@app.route('/add', methods=['POST'])
+def add():
+    recived = request.json
+    print(recived.get('item'))
+    item = recived.get('item')
+    if not item:
+        return jsonify({"error": "Missing item parameter."}), 400
+    try:
+        add_check(item)
+        return jsonify({"message": "Item added successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-        elif sys.argv[1] == "add":
-            if len(sys.argv) > 2:
-                add_check(sys.argv[2])
-            else:
-                how_to_use("Missing item")
+@app.route('/delete', methods=['DELETE'])
+def delete():
+    item_type = request.json.get('type')
+    item_id = request.json.get('id')
+    if not item_type:
+        return jsonify({"error": "Missing type parameter."}), 400
+    if not item_id:
+        return jsonify({"error": "Missing id parameter."}), 400
+    try:
+        type_check(item_type)
+        delete_item(item_id)
+        return jsonify({"message": "Item deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-        elif sys.argv[1] == "delete":
-            if len(sys.argv) > 2:
-                type_check(sys.argv[2])
-                list_items(sys.argv[2])
-                u_input = input("Please enter the ID to delete (or c to cancel): ")
-                if u_input == "c":
-                    print("Operation canceled.")
-                else:
-                    delete_item(u_input)
-            else:
-                how_to_use("Missing item")
+@app.route('/list', methods=['POST'])
+def list_item():
 
-        elif sys.argv[1] == "list":
-            if len(sys.argv) > 2:
-                type_check(sys.argv[2])
-                list_items(sys.argv[2])
-            else:
-                how_to_use("Missing item")
+    recived = request.json
+    print(recived.get('item'))
+    item_type = recived.get('item')
 
-        elif sys.argv[1] == "help":
-            help_command()
+    if not item_type:
+        return jsonify({"error": "Missing type parameter."}), 400
+    try:
+        type_check(item_type)
+        list_items(item_type)
+        return jsonify({"items": list_items(item_type)}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-        else:
-            how_to_use("Command not found!")
+@app.route('/help', methods=['GET'])
+def help():
+    try:
+        help_text = help_command()
+        return jsonify({"help": help_text}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    else:
-        how_to_use("Missing command.")
+@app.errorhandler(404)
+def page_not_found(e):
+    return jsonify({"error": "Command not found!"}), 404
 
+@app.route('/')
+def index():
+    return jsonify({"error": "Missing command."}), 400
 
 if __name__ == '__main__':
-    main()
+    check_for_database()
+    app.run(host='0.0.0.0', port=5000)
+
