@@ -1,0 +1,14 @@
+services:
+  phub_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phub-dl
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /etc/downloads:/app/PornHub-downloader-python/downloads  # Mount a volume for persistent data if needed
+    tty: true                    # Allocate a pseudo-TTY for interactive use
+    stdin_open: true             # Keep stdin open to allow interaction
+    command: tail -f /dev/null   # Keep the container running
